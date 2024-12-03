@@ -208,7 +208,13 @@ UA_PubSubKeyStorage_addKeyRolloverCallback(UA_Server *server,
     if(!server || !keyStorage || !callback || timeToNextMs <= 0)
         return UA_STATUSCODE_BADINVALIDARGUMENT;
 
-    UA_LOCK_ASSERT(&server->serviceMutex, 1);
+    // First remove the existing callback
+    if(*callbackID != 0) {
+        removeCallback(server, *callbackID);
+        *callbackID = 0;
+    }
+    
+    UA_LOCK_ASSERT(&psm->sc.server->serviceMutex);
 
     UA_DateTime dateTimeToNextKey = UA_DateTime_nowMonotonic() +
         (UA_DateTime)(UA_DATETIME_MSEC * timeToNextMs);
